@@ -1,0 +1,396 @@
+#lang play
+(require "start.rkt")
+
+(test (two-str (list (clubs 1) (hearts 1) (diamonds 1)
+                       (clubs 4) (hearts 4) (spades 4)
+                       (spades 5) (spades 6) (spades 7)))
+      '())
+
+(test (puntaje-ronda two-str (list (clubs 1) (hearts 1) (diamonds 1)
+                       (clubs 4) (hearts 4) (spades 4)
+                       (spades 5) (spades 6) (spades 7))) 75)
+
+(test (best-play (list (clubs 1) (hearts 1) (diamonds 1)
+                       (clubs 4) (hearts 4) (spades 4)
+                       (spades 5) (spades 6) (spades 7)))
+      "one-str-one-toak")
+
+(test (best-play (list (clubs 1) (hearts 1) (diamonds 1)
+                       (clubs 4) (hearts 4) (spades 4)
+                       (diamonds 6) (clubs 6) (spades 6)))
+      "three-toak")
+
+(test (puntaje-ronda three-toak (list (clubs 1) (hearts 1) (diamonds 1)
+                                      (clubs 4) (hearts 4) (spades 4)
+                                      (diamonds 6) (clubs 6) (spades 6)))
+      0)
+
+(test (puntaje-ronda one-str-one-toak (list (clubs 1) (hearts 1) (diamonds 1)
+                                             (clubs 4) (hearts 4) (spades 4)
+                                             (diamonds 6) (clubs 6) (spades 6)))
+      75)
+
+(test (quitaMelds (list (str "clubs" 7) (toak 2)) 
+                  (list (clubs 10) (hearts 2) (diamonds 2)
+                        (clubs 2) (hearts 4) (diamonds 4)
+                        (clubs 7) (clubs 8) (clubs 9)))
+      (list (hearts 4) (diamonds 4)))
+
+(test (quitaMelds (list (toak 2)) 
+                  (list (clubs 10) (hearts 2) (diamonds 2)
+                        (clubs 2) (hearts 4) (diamonds 4)
+                        (clubs 7) (clubs 8) (clubs 9)))
+      (list (clubs 10) (hearts 4) (diamonds 4)
+                        (clubs 7) (clubs 8) (clubs 9)))
+      
+(test (puntaje-ronda two-toak (list (spades 1) (hearts 1) (diamonds 1)
+                                    (clubs 3) (hearts 3) (diamonds 3)
+                                    (clubs 2) (hearts 2) (diamonds 2)))
+      6)
+
+
+(test (puntaje-ronda three-toak (list (spades 1) (hearts 1) (diamonds 1)
+                                    (clubs 3) (hearts 3) (diamonds 3)
+                                    (clubs 2) (hearts 2) (diamonds 2)))
+      0)
+
+(test (puntaje-ronda one-str-one-toak (list (clubs 10) (hearts 2) (diamonds 2)
+                                            (clubs 2) (hearts 4) (diamonds 4)
+                                            (clubs 7) (clubs 8) (clubs 9)))
+      8)
+
+(test (puntaje-ronda one-str-one-toak (list (clubs 11) (hearts 2) (diamonds 2)
+                                            (clubs 2) (hearts 4) (diamonds 4)
+                                            (clubs 7) (clubs 8) (clubs 9)))
+      48)
+
+
+      
+(test (sacaEscala (str "clubs" 1) (list (clubs 1) (clubs 3) (clubs 2)
+                                  (hearts 2) (clubs 4) (clubs 7)
+                                  (clubs 9) (diamonds 2) (clubs 6)))
+      (list (hearts 2) (clubs 7)
+            (clubs 9) (diamonds 2) (clubs 6)))
+
+
+
+
+
+(test (sacaCarta (spades 2) (list (clubs 1) (clubs 3) (spades 2)
+                                  (hearts 2) (clubs 4) (clubs 7)
+                                  (clubs 9) (diamonds 2) (clubs 6)))
+      (list (clubs 1) (clubs 3)
+            (hearts 2) (clubs 4) (clubs 7)
+            (clubs 9) (diamonds 2) (clubs 6)))
+
+(test (sacaCarta (clubs 2) (list (clubs 1) (clubs 3) (spades 2)
+                                  (hearts 2) (clubs 4) (clubs 7)
+                                  (clubs 9) (diamonds 2) (clubs 6)))
+      (list (clubs 1) (clubs 3) (spades 2)
+            (hearts 2) (clubs 4) (clubs 7)
+            (clubs 9) (diamonds 2) (clubs 6)))
+
+
+
+(test (sacaTrio (toak 2) (list (clubs 1) (clubs 3) (clubs 2)
+                                (hearts 2) (clubs 4) (clubs 7)
+                                (clubs 9) (diamonds 2) (clubs 6)) 3)
+      (list (clubs 1) (clubs 3) (clubs 4) (clubs 7) (clubs 9) (clubs 6)))
+
+(test (sacaTrio (toak 2) (list (clubs 1) (clubs 3) (clubs 2)
+                                (hearts 2) (clubs 4) (clubs 7)
+                                (clubs 9) (diamonds 2) (spades 2)) 3)
+      (list (clubs 1) (clubs 3) (clubs 4) (clubs 7) (clubs 9) (spades 2)))
+
+(test (sacaTrio (toak 2) (list (clubs 1) (clubs 3) (spades 3)
+                                (hearts 2) (clubs 4) (clubs 7)
+                                (clubs 9) (diamonds 2) (clubs 6)) 3)
+      (list (clubs 1) (clubs 3) (spades 3) 
+            (clubs 4) (clubs 7) (clubs 9) (clubs 6)))
+
+
+
+(test (two-str (list (clubs 1) (clubs 3) (clubs 2)
+                      (clubs 5) (clubs 4) (clubs 7)
+                      (clubs 9) (clubs 8) (clubs 6)))
+      '())
+
+(test (two-str (list (clubs 1) (clubs 3) (clubs 2)
+                      (hearts 5) (clubs 4) (hearts 7)
+                      (clubs 9) (hearts 8) (diamonds 6)))
+      '())
+
+
+(test (two-str (list (spades 1) (hearts 1) (diamonds 1)
+                      (clubs 3) (hearts 3) (diamonds 3)
+                      (clubs 2) (hearts 2) (diamonds 2)))
+      '())
+
+(test (two-str (list (clubs 3) (hearts 1) (hearts 2)
+                      (clubs 1) (hearts 3) (diamonds 3)
+                      (clubs 2) (hearts 4) (clubs 4)))
+      (list (str "hearts" 1) (str "clubs" 1)))
+
+(test (two-str (list (hearts 1) (hearts 2) (hearts 3)
+                     (hearts 4) (clubs 1) (hearts 7) 
+                     (hearts 8) (hearts 9) (hearts 10)))
+      '())
+
+(test (scaleFromCard (clubs 7)) (str "clubs" 7))
+
+
+(test (mejores 1 (list '(6 7 8 9) '(3 6 7 9) '(2 3 4 5))
+               (list '(6 7 8 9) '(3 6 7 9) '(2 3 4 5))
+               (list '(6 7 8 9) '(3 6 7 9) '(2 3 4 5))
+               (list '(6 7 8 9) '(3 6 7 9) '(2 3 4 5)))
+      (list (spades 6)))
+
+
+(test (mejores 1 (list '(3 6 7 9) '(2 3 4 5))
+               (list '(6 7 8 9) '(3 6 7 9) '(2 3 4 5))
+               (list '(6 7 8 9) '(3 6 7 9) '(2 3 4 5))
+               (list '(6 7 8 9) '(3 6 7 9) '(2 3 4 5)))
+      (list (hearts 6)))
+
+(test (mejores 2 (list '(3 6 7 9) '(2 3 4 5))
+               (list '(6 7 8 9) '(3 6 7 9) '(2 3 4 5))
+               (list '(6 7 8 9) '(3 6 7 9) '(2 3 4 5))
+               (list '(6 7 8 9) '(3 6 7 9) '(2 3 4 5)))
+      (list (hearts 6) (diamonds 6)))
+
+
+(test (mejores 1 '() '() '() '()
+               )
+      '())
+
+
+(test (mejores 1 (list '(3 7 8 9) '(3 6 7 9) '(2 3 4 5))
+               '()
+               (list '(4 7 8 9) '(3 6 7 9) '(2 3 4 5))
+               (list '(2 7 8 9) '(3 6 7 9) '(2 3 4 5)))
+      (list (diamonds 4)))
+
+
+(test (one-str-one-toak (list (clubs 10) (clubs 11) (diamonds 2)
+                              (clubs 2) (hearts 4) (diamonds 4)
+                              (clubs 7) (clubs 8) (clubs 9)))
+      '())
+      
+(test (one-str-one-toak (list (clubs 10) (hearts 3) (diamonds 2)
+                              (clubs 2) (hearts 4) (diamonds 4)
+                              (clubs 7) (clubs 8) (clubs 9)))
+      '())
+      
+(test (one-str-one-toak (list (clubs 10) (hearts 2) (diamonds 2)
+                              (clubs 2) (hearts 4) (diamonds 4)
+                              (clubs 7) (clubs 4) (clubs 9)))
+      '())
+      
+(test (one-str-one-toak (list (clubs 10) (hearts 2) (diamonds 2)
+                              (clubs 2) (hearts 4) (diamonds 4)
+                              (clubs 7) (clubs 8) (clubs 9)))
+      (list (str "clubs" 7) (toak 2)))
+      
+(test (escaleras (list '(6 7 9 11) '(3 6 7 9) '(2 3 6 7))) '())
+(test (escaleras (list '(6 7 8 9) '(3 6 7 9) '(2 3 6 7))) (list '(6 7 8 9)))
+(test (escaleras (list '(6 7 8 9) '(3 6 7 9) '(2 3 4 5))) (list '(6 7 8 9) '(2 3 4 5) ))
+
+(test (zipWith '() '(2 4 6) +) '())
+(test (zipWith '(1 2 3) '(1 2 3) equal?)
+'(#t #t #t))
+(test (zipWith '(1 3) '(2 4 6) +)
+'(3 7))
+
+(test (zip '() '(1 2 3)) 
+      '())
+(test (zip '(1 2 3) '(3 2 1))
+      '((1 . 3) (2 . 2) (3 . 1)))
+(test (zip '(8 9 10 11 13) '(11 10 9))
+      '((8 . 11) (9 . 10) (10 . 9)))
+
+
+(test (eq-fun odd? odd? 0 0) 
+      1)
+(test (eq-fun odd? odd? 0 10)
+      11)
+(test (eq-fun odd? even? 4 8)
+      0)
+(test (eq-fun (lambda(x) (< 2 x)) (lambda(x) (< 3 x)) 0 4) 
+      4)
+
+
+(test (sep-aux '(2) '() ) 
+      '((2)))
+(test (sep-aux '(3) '(1 5 6 1 1 1 3 4))
+      '((3) (1) (5) (6) (1 1 1) (3) (4)))
+(test (sep-aux '(#t) '(#t #f #f #t #t))
+      '((#t #t) (#f #f) (#t #t)))
+
+(test (sep-list '() ) 
+      '())
+(test (sep-list '(3 1 5 6 1 1 1 3 4))
+      '((3) (1) (5) (6) (1 1 1) (3) (4)))
+(test (sep-list '(#t #t #f #f #t #t))
+      '((#t #t) (#f #f) (#t #t)))
+
+
+(test (valueOf (spades 4)) 4)
+(test (valueOf (clubs 11)) 10)
+(test (valueOf (diamonds 1)) 15) 
+(test (valueOf 1) 15) 
+
+
+(test (numberOf (spades 1)) 1)
+(test (numberOf (spades 13)) 13)
+#|
+(test (lfn 1 '())
+      '(1 . 1))
+
+(test (lfn 1 '( (1 . 2) (2 . 2) (3 . 1)))
+      '((1 . 3) (2 . 2) (3 . 1)))
+
+|#
+(test (cuenta 1 '(1 2 1 3 4 1 1) 0) 4)
+(test (cuenta 0 '(1 2 1 3 4 1 1) 0) '())
+
+(test (buscatrios2 '(1 2 3 1 4 1)) (list 3 1 1 1 0 0 0 0 0 0 0 0 0))
+(test (buscatrios2 '(4 1 2 4 1 4 13 1)) (list 3 1 0 3 0 0 0 0 0 0 0 0 1))
+
+(test (buscatrios3 '(3 1 1 1 0 0 0 0 0 0 0 0 0) 1) (list (toak 1)))
+(test (buscatrios3 '(3 1 0 3 0 0 0 0 0 0 0 0 1) 1) (list (toak 1) (toak 4)))
+
+
+
+;; separar (Listof Card) -> (Listof Card)
+(test (separar (list (clubs 1) (hearts 1) (diamonds 1)
+                      (clubs 2) (hearts 3) (diamonds 4)
+                      (clubs 7) (hearts 6) (diamonds 5)) spades?)
+      '())
+
+(test (separar (list (spades 1) (hearts 1) (diamonds 1)
+                      (clubs 2) (hearts 3) (diamonds 4)
+                      (clubs 7) (hearts 6) (diamonds 5)) spades?)
+      (list (spades 1)))
+
+(test (separar (list (spades 1) (hearts 1) (diamonds 1)
+                      (clubs 2) (hearts 3) (diamonds 4)
+                      (clubs 7) (hearts 6) (diamonds 5)) diamonds?)
+      (list (diamonds 1) (diamonds 4) (diamonds 5)))
+
+(test (equalType (spades 2) (spades 4)) (spades 2))
+(test (equalType (spades 3) (clubs 3)) #f)
+
+
+(test (typeOf (spades 2)) 3)
+(test (typeOf (hearts 2)) 2)
+(test (typeOf (diamonds 2)) 1)
+(test (typeOf (clubs 2)) 0)
+
+(test (ranked-hand2? (list (spades 1) (spades 1) (spades 1)
+                      (spades 3) (spades 3) (spades 3)
+                      (spades 2) (spades 2) (spades 2))) (spades 1))
+
+
+(test (ranked-hand2? (list (spades 1) (hearts 1) (diamonds 1)
+                      (clubs 3) (hearts 3) (diamonds 3)
+                      (clubs 2) (hearts 2) (diamonds 2))) #f)
+(test (ranked-hand2? (list (spades 1) (spades 1) (spades 1)
+                      (spades 3) (spades 3) (spades 3)
+                      (clubs 2) (spades 2) (spades 2))) #f)
+
+(test (ranked-hand? (list (spades 1) (spades 1) (spades 1)
+                      (spades 3) (spades 3) (spades 3)
+                      (spades 2) (spades 2) (spades 2))) #t)
+
+
+(test (ranked-hand? (list (spades 1) (hearts 1) (diamonds 1)
+                      (clubs 3) (hearts 3) (diamonds 3)
+                      (clubs 2) (hearts 2) (diamonds 2))) #f)
+(test (ranked-hand? (list (spades 1) (spades 1) (spades 1)
+                      (spades 3) (spades 3) (spades 3)
+                      (clubs 2) (spades 2) (spades 2))) #f)
+
+(test (ordenatrios (list (toak 3) (toak 1))) 
+      (list (toak 1) (toak 3)))
+(test (ordenatrios (list (toak 3) (toak 1) (toak 13))) 
+      (list (toak 1) (toak 13) (toak 3)))
+(test (ordenatrios (list (toak 1))) 
+      (list (toak 1)))
+(test (ordenatrios '()) 
+      '())
+
+(test (two-toak (list (spades 1) (hearts 13) (diamonds 1)
+                      (clubs 3) (hearts 13) (diamonds 3)
+                      (clubs 2) (hearts 13) (diamonds 3)))
+      (list (toak 13) (toak 3)))
+
+(test (two-toak (list (spades 1) (hearts 3) (diamonds 1)
+                      (clubs 4) (hearts 11) (diamonds 3)
+                      (clubs 2) (hearts 13) (diamonds 6)))
+      '())
+(test (two-toak (list (spades 1) (hearts 1) (diamonds 1)
+                      (clubs 3) (hearts 3) (diamonds 3)
+                      (clubs 2) (hearts 2) (diamonds 2)))
+      (list (toak 1) (toak 3)))
+
+(test (two-toak (list (spades 1) (hearts 1) (diamonds 1)
+                      (clubs 2) (hearts 3) (diamonds 4)
+                      (clubs 7) (hearts 6) (diamonds 5)))
+      '())
+
+(test (three-toak (list (spades 1) (hearts 1) (diamonds 1)
+                      (clubs 3) (hearts 3) (diamonds 3)
+                      (clubs 2) (hearts 2) (diamonds 2)))
+      (list (toak 1) (toak 3) (toak 2) ))
+
+(test (three-toak (list (spades 1) (hearts 1) (diamonds 1)
+                      (clubs 13) (hearts 3) (diamonds 3)
+                      (clubs 2) (hearts 2) (diamonds 2)))
+      '())
+(test (three-toak (list (spades 1) (hearts 1) (diamonds 1)
+                      (clubs 2) (hearts 3) (diamonds 4)
+                      (clubs 7) (hearts 6) (diamonds 5)))
+      '())
+
+
+(test (ordena '(1 3 2 4) <) '(1 2 3 4))
+(test (ordena '(4 3 2 1) <) '(1 2 3 4))
+(test (ordena '(4 1 2 1) <) '(1 1 2 4))
+
+
+
+;; ;; straight-hand2? :: (Listof Cards) -> Bool
+(test (straight-hand2? (list 1 2 5 8 3 4 7 6 9)) 1)
+
+(test (straight-hand2? (list 13 2 5 8 3 4 7 6 9)) 15)
+
+;; ;; straight-hand? :: (Listof Cards) -> Bool
+(test (straight-hand? (list (spades 1) (hearts 2) (diamonds 5)
+                      (clubs 8) (hearts 3) (diamonds 4)
+                      (clubs 7) (hearts 6) (diamonds 9))) #t)
+
+(test (straight-hand? (list (spades 13) (hearts 2) (diamonds 5)
+                            (clubs 8) (hearts 3) (diamonds 4)
+                            (clubs 7) (hearts 6) (diamonds 9))) #f)
+
+(test (straight-hand? (list (spades 9) (hearts 2) (diamonds 5)
+                            (clubs 8) (hearts 3) (diamonds 4)
+                            (clubs 7) (hearts 6) (diamonds 9))) #f)
+
+(test (straight-hand? (list (spades 2) (hearts 2) (diamonds 5)
+                            (clubs 8) (hearts 3) (diamonds 4)
+                            (clubs 7) (hearts 6) (diamonds 9))) #f)
+
+(test (quitar 4 '(1 3 4 5)) '(1 3 5))
+(test (quitar 4 '(1 3 2 5)) '(1 3 2 5))
+(test (quitar 4 '()) '())
+(test (quitar 4 '(4 4 4)) '(4 4))
+
+(test (revierte '()) '())
+(test (revierte '(1)) '(1))
+(test (revierte '(1 2 3 4)) '(4 3 2 1))
+
+(test (grupos4 '()) '())
+(test (grupos4 '(1 2 3)) '())
+(test (grupos4 '(2 3 6 7 9)) '())
+(test (grupos4 '(2 3 4 5 6 7)) (list '(4 5 6 7) '(3 4 5 6) '(2 3 4 5)))

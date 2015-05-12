@@ -1,0 +1,26 @@
+#lang play
+(print-only-errors)
+
+(deftype Card
+  (spades number)
+  (hearts number)
+  (diamonds number)
+  (clubs number))
+
+(deftype Melt
+  (str rank fst)
+  (toak num))
+
+(define (zipWith l1 l2 f) void)
+(define (zip l1 l2) void)
+(define (eq-fun f1 f2 i j) void)
+(define (sep-list list) void)
+
+(define (two-toak cards) void)
+(define (one-str-one-toak cards) void)
+(define (two-str cards) void)
+(define (three-toak cards) void)
+(define (ranked-hand? cards) void)
+(define (straight-hand? cards) void)
+(define (puntaje-ronda ronda cards) void)
+(define (best-play cards) void)

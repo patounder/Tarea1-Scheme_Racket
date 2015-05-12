@@ -1,0 +1,691 @@
+#lang play
+(print-only-errors)
+
+(deftype Card
+  (spades number)
+  (hearts number)
+  (diamonds number)
+  (clubs number))
+
+(deftype Melt
+  (str rank fst)
+  (toak num))
+
+#|
+
+zipWith :: (Listof A) (Listof B) (A B -> C) -> (Listof C)
+
+La funcion zipWith recibe tres parametros de entrada, dos listas y una Funcion binaria.
+La funcion de entrada se utilizara para determinar la lista de salida o retorno.
+
+|#
+
+(define (zipWith l1 l2 f) 
+  (match (cons l1 l2)
+    [(cons '() t) '()]
+    [(cons h '()) '()]
+    [(cons (cons h1 t1) (cons h2 t2)) (cons (f h1 h2) (zipWith t1 t2 f))]
+    )
+  )
+
+(test (zipWith '(1 3) '(2 4 6) +) '(3 7))
+(test (zipWith '(1 2 3) '(1 2 3) equal?) '(#t #t #t))
+(test (zipWith '(3 4 10) '(3 5 2) [λ(x y)(expt x y)]) '(27 1024 100))
+(test (zipWith '(1 3) '(2) +) '(3))
+
+#|
+zip :: (Listof A) (Listof B) -> (Listof (Cons A B))
+
+La funcion zip recibe de parametros de entrada dos listas de elementos y genera
+como retorno una lista que contiene pares con cada elemento de las listas de entrada.
+|#
+
+(define (zip l1 l2)
+  (zipWith l1 l2 cons)
+  )
+
+(test (zip '(1 2 3) '(3 2 1)) '((1 . 3) (2 . 2) (3 . 1)))
+(test (zip '(8 9 10 11 13) '(11 10 9)) '((8 . 11) (9 . 10) (10 . 9)))
+(test (zip '(1 2 3) '(hola chao)) '((1 . hola) (2 . chao)))
+(test (zip '(#t #f #f) '(1 hola true)) '((#t . 1) (#f . hola) (#f . true)))
+
+#|
+listIntervalo :: Num -> Num -> (Listof Number)
+
+La funcion listIntervalo genera una lista desde i hasta j, incluyendo ambos números
+|#
+
+(define (listIntervalo i j)
+  (cond
+    [(or (< i j) (eq? i j)) (cons i (listIntervalo (+ i 1) j))]
+    [else '()]))
+
+(test (listIntervalo 1 1) '(1))
+(test (listIntervalo 2 1) '())
+(test (listIntervalo 1 3) '(1 2 3))
+
+#|
+eq-fun :: (Number -> A) (Number -> B) Number Number -> Number
+
+La funcion eq-fun recibe como parametro dos funciones y dos numeros. Retorna
+el numero de coincidencias que se presentan al aplicar las funciones entre el 
+rango determinado por los numeros ingresados.
+|#
+
+(define (eq-fun f1 f2 i j)
+  (foldr +
+         0
+         (zipWith 
+          (map f1 (listIntervalo i j))
+          (map f2 (listIntervalo i j))
+          (λ(x y) (if (equal? x y)
+                      1
+                      0))))
+  )
+
+(test (eq-fun odd? odd? 0 10) 11)
+(test (eq-fun odd? even? 4 8) 0)
+(test (eq-fun (λ(x)(>= x 8)) (λ(y)(<= y 10)) 6 16) 3)
+
+#|
+sep-list :: (Listof A) -> (Listof (Listof A))
+
+La funcion sep-list recibe como parametro de entrada una lista y genera como
+retorno una lista que contiene sublistas de los elementos consecutivos iguales.
+|#
+
+(define (sep-list l)
+
+  (foldr (λ (n i)
+           (if (equal? i empty)
+               (list (list n))
+               (if (equal? n (car (car i)))
+                   (cons (append (list n) (car i)) (cdr i))
+                   (cons (list n) i)
+                   )
+               ))
+         '()
+         l
+         )
+  )
+
+(test (sep-list '(3 1 5 6 1 1 1 3 4)) '((3) (1) (5) (6) (1 1 1) (3) (4)) )
+(test (sep-list '(#t #t #f #f #t #t)) '((#t #t) (#f #f) (#t #t)) )
+(test (sep-list '()) '())
+
+;2 ------------------------------------------------------------------------------------
+#|
+get-num :: (Card) -> number
+
+Funcion get-num retorna el numero de una carta
+|#
+
+(define (get-num card)
+  (match card
+    [(spades n) n]
+    [(hearts n) n]
+    [(clubs n) n]
+    [(diamonds n) n]
+    )
+  )
+
+(test (get-num (diamonds 10)) 10)
+(test (get-num (hearts 1)) 1)
+(test (get-num (clubs 7)) 7)
+
+#|
+toak-in-hand :: (Listof Card) -> (Listof Melt)
+
+La funcion toak-in-hand es una funcion auxiliar que recibe como parametro
+una lista de Cards, una mano, y retorna una lista con los trios de esa mano
+|#
+
+(define (toak-in-hand cards) 
+ 
+  (let* ([lgroup (foldr (λ (n i)
+                         (if (equal? i empty)
+                             (list (list n))
+                             (if (equal? (get-num n) (get-num (car (car i))))
+                                 (cons (append (list n) (car i)) (cdr i))
+                                 (cons (list n) i)
+                                 )
+                             ))
+                       '()
+                       (sort cards (λ(n m)(< (get-num n) (get-num m))))
+                       )
+                ]
+         [ltoak (filter (λ(gc) (> (length gc) 2)) lgroup)]
+         )
+    (foldr (λ(gc gi) (if (equal? gi empty)
+                             (list (toak (get-num (first gc))))
+                             (append (list (toak (get-num (first gc)))) gi)
+                             )) '() ltoak)
+    )
+  )
+
+(test (toak-in-hand (list (spades 1) (hearts 1) (diamonds 1)
+                    (clubs 3) (hearts 3) (diamonds 3)
+                    (clubs 2) (hearts 2) (diamonds 2)))
+(list (toak 1) (toak 2) (toak 3)))
+
+(test (toak-in-hand (list (spades 1) (hearts 1) (diamonds 1)
+                    (clubs 3) (hearts 4) (diamonds 3)
+                    (clubs 2) (hearts 1) (diamonds 2)))
+(list (toak 1)))
+
+(test (toak-in-hand (list (spades 1) (hearts 10) (diamonds 1)
+                    (clubs 3) (hearts 4) (diamonds 3)
+                    (clubs 2) (hearts 2) (diamonds 12)))
+'())
+
+#|
+
+two-toak :: (Listof Cards) -> (Listof Melt)
+
+La funcion two-toak recibe como parametro de entrada una lista de Cards, correspondiente a la 
+mano del jugador, y esta retorna una lista de toak que contienen mas alto puntaje.
+|#
+
+(define (two-toak cards) 
+  
+  (let ([toak-list (toak-in-hand cards)])
+    (cond
+      [(< (length toak-list) 2) empty]
+      [(= (length toak-list) 2) (if (equal? (toak 1) (first toak-list)) toak-list (reverse toak-list)) ]
+      [else (let ([lord (sort toak-list (λ(n m)(< (toak-num n) (toak-num m))))])
+              (if (equal? (toak 1) (first lord))
+                  (list (first lord) (last lord))
+                  (list (last lord) (second lord))
+              ))]
+            
+      )
+    )
+  )
+
+(test (two-toak (list (spades 1) (hearts 1) (diamonds 1)
+                (clubs 3) (hearts 3) (diamonds 3)
+                (clubs 2) (hearts 2) (diamonds 2)))
+
+                (list (toak 1) (toak 3)))
+
+(test (two-toak (list (spades 1) (hearts 1) (diamonds 1)
+                    (clubs 3) (hearts 4) (diamonds 3)
+                    (clubs 2) (hearts 1) (diamonds 3)))
+ (list (toak 1) (toak 3))
+)
+
+(test (two-toak (list (spades 1) (hearts 1) (diamonds 1)
+                    (clubs 3) (hearts 4) (diamonds 3)
+                    (clubs 2) (hearts 1) (diamonds 2)))
+'())
+
+#|
+build-scala :: (str "string" n) number -> (Listof Cards)
+
+Funcion build-scala recibe como parametro de entrada una escala y numero 
+que representa la cantidad de elementos que debe tener la escala,
+y lista de cartas que representa la escala.
+|#
+
+(define (build-scala str-in n li)
+   
+ (if (> n 0)
+     (cond
+       [(equal? (str-rank str-in) "diamonds") (append (list (diamonds (str-fst str-in))) (build-scala (str "diamonds" (add1 (str-fst str-in))) (sub1 n) li))]
+       [(equal? (str-rank str-in) "hearts") (append (list (hearts (str-fst str-in))) (build-scala (str "hearts" (add1 (str-fst str-in))) (sub1 n) li))]
+       [(equal? (str-rank str-in) "clubs") (append (list (clubs (str-fst str-in))) (build-scala (str "clubs" (add1 (str-fst str-in))) (sub1 n) li))]
+       [(equal? (str-rank str-in) "spades") (append (list (spades (str-fst str-in))) (build-scala (str "spades" (add1 (str-fst str-in))) (sub1 n) li))]
+       )
+  empty
+     )
+  )
+
+(test (build-scala (str "clubs" 1) 4 '())
+(list (clubs 1) (clubs 2) (clubs 3)(clubs 4)))
+
+(test (build-scala (str "spades" 6) 4 '())
+(list (spades 6) (spades 7) (spades 8) (spades 9)))
+
+#|
+
+lis-str :: (Listof Melt) -> (Listof (Listof Melt))
+
+La funcion lis-str recibe una lista ordenada de cartas de una pinta (spades, clubs, diamonds o hearts) y
+retorna una lista con las escalas, sublistas, de cuatro cartas.
+|#
+
+(define (lis-str lcs)
+  
+  (def str-4 (filter (λ(c) (>= (length c) 4)) (foldr (λ (c i)
+                                    (if (equal? i empty)
+                                        (list (list c))
+                                        (if (= (get-num c) (sub1 (get-num (car (car i))) ))
+                                            (cons (append (list c) (car i)) (cdr i))
+                                            (cons (list c) i)
+                                            )
+                                        ))
+                                  '()
+                                  lcs
+                                  )))
+  (cond
+    [(empty? str-4) str-4]
+    [(= (length (car str-4)) 8) (list (split-at-right (car str-4) 4))]
+    [(and (< (length (car str-4)) 8) (> (length (car str-4)) 4)) (list (take (car str-4) 4))]
+    [else str-4]
+          )
+  )
+
+(test  (lis-str (list (diamonds 1)(diamonds 2)(diamonds 3)(diamonds 4)(diamonds 7)) )
+(list (list (diamonds 1) (diamonds 2) (diamonds 3) (diamonds 4))))
+
+(test (lis-str (list (diamonds 1)(diamonds 2)(diamonds 3)(diamonds 4)(diamonds 6)(diamonds 7)(diamonds 8)(diamonds 9)) )
+(list (list (diamonds 1) (diamonds 2) (diamonds 3) (diamonds 4)) (list (diamonds 6) (diamonds 7) (diamonds 8) (diamonds 9))))
+
+(test (lis-str (list (diamonds 1) (diamonds 4) (diamonds 7) (diamonds 12) (diamonds 13))) '())
+
+#|
+format-str :: ((List (Listof Melt)) String) -> (Listof Melt)
+
+Funcion que recibe una lista con sublistas de escalas de una pinta, y un string que indica el tipo de la escala.
+Se retorna la lista de Melt (str "pinta" n_inicio) correspondiente
+|#
+
+(define (format-str list-str)
+  
+  (match list-str
+    ['() empty]
+    [(list la) (if (= (length la) 4)
+                   (list (format-str la))
+                   (format-str (list (remove* (cddddr la) la) (cddddr la))))]
+    [(list la lb) (list  (format-str la) (format-str lb))]
+    [(list a b c d)(match a
+                     [(diamonds n) (str "diamonds" n)]
+                     [(spades n) (str "spades" n)]
+                     [(clubs n) (str "clubs" n)]
+                     [(hearts n) (str "hearts" n)]
+                     )]
+    )
+  
+  )
+
+(test
+   (format-str (list (list (diamonds 1) (diamonds 2) (diamonds 3) (diamonds 4) ) ) )
+(list (str "diamonds" 1)))
+
+(test
+  (format-str (list (list (clubs 6) (clubs 7) (clubs 8) (clubs 9) (clubs 10) (clubs 11) (clubs 12) (clubs 13))) )
+(list (str "clubs" 6) (str "clubs" 10)))
+
+#|
+str-in-hand :: (Listof Card) -> (Listof Melt)
+
+La funcion str-in-hand recibe como parametro de entrada una lista de Card, y genera como
+retorno una lista Melt con las escalas que contiene la mano.
+|#
+
+(define (str-in-hand cards)
+
+  (let* ([str-spades (if (> (length (filter spades? cards)) 3)
+                       (lis-str (sort (filter spades? cards) [λ(n m)(< (spades-number n) (spades-number m))]) ) 
+                       empty)]
+        [str-clubs (if (> (length (filter clubs? cards)) 3)
+                     (lis-str (sort (filter clubs? cards) [λ(n m)(< (clubs-number n) (clubs-number m))]))
+                     empty)]
+        [str-hearts [if (> (length (filter hearts? cards)) 3)
+                      (lis-str (sort (filter hearts? cards) [λ(n m)(< (hearts-number n) (hearts-number m))]))
+                      empty]]
+        [str-diamonds [if (> (length (filter diamonds? cards)) 3)
+                        (lis-str (sort (filter diamonds? cards) [λ(n m)(< (hearts-number n) (hearts-number m))]))
+                        empty]]
+        [str-final (append (format-str str-spades) (format-str str-clubs) (format-str str-hearts) (format-str str-diamonds))])
+    
+    str-final
+    
+    )
+    
+  )
+
+(test (str-in-hand (list (spades 1) (hearts 1) (spades 2)
+        (spades 3) (hearts 4) (diamonds 3)
+        (clubs 2) (spades 4) (diamonds 2)))
+ (list (str "spades" 1)))
+
+(test (str-in-hand (list (spades 1) (hearts 3) (spades 2)
+        (spades 3) (hearts 5) (hearts 4)
+        (clubs 2) (spades 4) (hearts 6)))
+ (list (str "spades" 1) (str "hearts" 3)))
+
+(test (str-in-hand (list (spades 1) (spades 3) (spades 2)
+        (spades 10) (spades 4) (spades 6)
+        (spades 9) (spades 7) (spades 11)))
+ (list (str "spades" 1)))
+
+(test (str-in-hand (list (spades 1) (spades 3) (spades 10)
+        (clubs 5) (clubs 4) (clubs 6)
+        (diamonds 9) (diamonds 12) (diamonds 8)))
+ '())
+
+#|
+puntaje-str :: (str "..." n) -> number
+
+La funcion puntaje-str suma el puntaje de la escala, pasada como parametro,
+y retorna el puntaje asociado
+
+|#
+
+(define (puntaje-str esc-in)
+  (let ([n-ini (str-fst esc-in)])
+    (cond
+      [(= n-ini 1) 24]
+      [(= n-ini 10) 40]
+      [else (+ n-ini ((lambda (x) (+ x 1))n-ini) ((lambda (x) (+ x 2))n-ini) ((lambda (x) (+ x 3))n-ini))]
+      ))
+  )
+
+(test (puntaje-str (str "diamonds" 1)) 24)
+(test (puntaje-str (str "clubs" 10)) 40)
+(test (puntaje-str (str "hearts" 5)) 26)
+
+#|
+
+ranked-hand? :: (Listof Card) -> Boolean
+
+La funcion ranked-hand? recibe como parametro una lista de Card, y retorna
+un valor booleano, considerando como caso true si la lista de entrada tiene
+solo cartas de la misma pinta, y false en caso contrario. Usa en su implementacion
+la funcion de racket foldr
+|#
+
+(define (ranked-hand? cards) 
+ 
+  (let ([ret (foldr (λ(c i)
+                      (if (equal? i '())
+                          c
+                          (if (equal? i #f)
+                              #f
+                   (match (cons c i)
+                     [(cons (spades _) (spades _)) c]
+                     [(cons (clubs _) (clubs _)) c]
+                     [(cons (hearts _) (hearts _)) c]
+                     [(cons (diamonds _) (diamonds _)) c]
+                     [x #f]
+                     )
+                   )
+               )
+           ) '() cards)])
+    (if (equal? ret #f)
+        ret
+        #t)
+    )
+  )
+
+(test (ranked-hand? (list (spades 1) (spades 2) (spades 3)
+                (spades 4) (spades 5) (spades 6)
+                (spades 7) (spades 8) (spades 9))) #t)
+(test (ranked-hand? (list (spades 1) (hearts 1) (diamonds 1)
+                (clubs 3) (hearts 3) (diamonds 3)
+                (clubs 2) (hearts 2) (diamonds 2))) #f)
+
+(test (ranked-hand? (list (spades 1) (spades 2) (spades 3)
+                (spades 4) (spades 5) (diamonds 6)
+                (clubs 7) (hearts 8) (diamonds 9))) #f)
+
+#|
+straight-hand? :: (Listof Card) -> Boolean
+
+La funcion straight-hand? recibe como parametro una lista de Card, y retorna
+un valor booleano, considerando como caso true si la lista de entrada tiene
+solo cartas que forman una escala de 9 cartas sin importar su pinta, y false
+en caso contrario. Usa en su implementacion la funcion de racket foldr
+|#
+
+(define (straight-hand? cards) 
+  
+  (let ([ret (foldr (λ(c i)                      
+                      (if (equal? i '())
+                            (cons c '())
+                            (if (equal? i #f)
+                                #f
+                                (if (= (get-num c) (sub1 (get-num (car i)))) 
+                                    (cons c i)
+                                    #f
+                                    )
+                                )
+                            )
+                        )
+                       '() (sort cards (λ(n m)(< (get-num n) (get-num m)))))])
+    (if (equal? ret #f)
+        ret
+        #t)
+    )
+  )
+
+(test (straight-hand? (list (spades 11) (hearts 3) (spades 12) (spades 13) (hearts 5) (hearts 4) (clubs 2) (spades 10) (hearts 6)))
+#f)
+
+(test (straight-hand? (list (spades 1) (spades 2) (spades 3)
+               (spades 4) (spades 5) (spades 6)
+                (spades 7) (spades 8) (spades 9))) #t)
+
+(test (straight-hand? (list (spades 1) (spades 2) (spades 3)
+                (clubs 4) (clubs 5) (clubs 6)
+                (spades 7) (diamonds 8) (clubs 9))) #t)
+
+(test (straight-hand? (list (spades 1) (hearts 1) (diamonds 1)
+                (clubs 3) (hearts 3) (diamonds 3)
+                (clubs 2) (hearts 2) (diamonds 2))) #f)
+
+#|
+two-str :: (Listof Cards) -> (Listof Meld)
+
+La funcion two-str veriﬁca si hay (al menos) dos escalas de distinta pinta. En caso contrario retorna
+una lista vacia
+
+|#
+(define (two-str cards)
+  
+  (let ([strs (if (straight-hand? cards)
+                  empty
+                  (str-in-hand cards))])
+    (if (= 2 (length strs))
+        (if (equal? (str-rank (first strs)) (str-rank (second strs)))
+            empty
+            (if (> (puntaje-str (first strs)) (puntaje-str (second strs)))
+                strs
+                (foldl cons '() strs)
+                )
+            )
+        empty
+        )
+        )
+    )
+  
+(test (two-str (list (spades 1) (hearts 1) (spades 2) (spades 3) (hearts 4) (diamonds 3) (clubs 2) (spades 4) (diamonds 2)))
+'())
+
+(test (two-str (list (spades 1) (hearts 3) (spades 2) (spades 3) (hearts 5) (hearts 4) (clubs 2) (spades 4) (hearts 6)))
+ (list (str "spades" 1) (str "hearts" 3))) 
+
+(test (two-str (list (spades 11) (hearts 3) (spades 12) (spades 13) (hearts 5) (hearts 4) (clubs 2) (spades 10) (hearts 6)))
+(list (str "spades" 10) (str "hearts" 3)))
+
+#|
+three-toak cards :: (Listof Card) -> (Listof Melt)
+
+La funcion three-toak verifica que existan tres trios de cartas
+en la mano y devuelve una lista de trios, en caso incorrecto devuelve
+una lista vacia
+|#
+(define (three-toak cards)
+ 
+  (let ([trio-list (toak-in-hand cards)])
+    (if (= 3 (length trio-list))
+        (if (equal? (toak 1) (first trio-list))
+                  (append (list (first trio-list)) (foldl cons '() (cdr trio-list)))
+                  (foldl cons '() trio-list)
+              )
+        
+        empty
+        )
+    )
+  )
+
+(test (three-toak (list (spades 1) (hearts 1) (diamonds 1)
+                    (clubs 3) (hearts 3) (diamonds 3)
+                    (clubs 2) (hearts 2) (diamonds 2)))
+(list (toak 1) (toak 3) (toak 2)))
+
+(test (three-toak (list (spades 1) (hearts 1) (diamonds 1)
+                    (clubs 3) (hearts 4) (diamonds 3)
+                    (clubs 2) (hearts 1) (diamonds 2)))
+'())
+
+(test (three-toak (list (spades 1) (hearts 1) (diamonds 1)
+                    (clubs 3) (hearts 4) (diamonds 3)
+                    (clubs 2) (hearts 2) (diamonds 2)))
+'())
+
+(test (three-toak (list (spades 11) (hearts 11) (diamonds 11)
+                    (clubs 1) (hearts 1) (diamonds 1)
+                    (clubs 12) (hearts 12) (diamonds 12)))
+(list (toak 1) (toak 12) (toak 11)))
+
+
+
+#|
+one-str-one-toak :: (LIstof Cards) -> (Listof Melt)
+
+La funcion one-str-one-toak verifica que exista al menos una escala y un trio.
+retorna una lista vacia en caso que no se cumpla lo necesario.
+|#
+
+(define (one-str-one-toak cards) 
+  (letrec([toaks (toak-in-hand cards)]
+          [strs  (str-in-hand cards)]
+          [cond-ini (and (not (empty? toaks)) (not (empty? strs)))])
+    (if (and (equal? cond-ini #t) (false? (ranked-hand? cards)) (false? (straight-hand? cards)))
+        (let*[    
+        (new-hand (remove* (build-scala (car strs) 4 '()) cards))
+        (l-toak (toak-in-hand new-hand))]
+        (if (not (empty? l-toak))
+                   (list (car strs) (car l-toak))
+                   empty;No hay trio
+                   )
+        )
+        empty
+       )
+    ))
+
+(test (one-str-one-toak (list (spades 1) (hearts 1) (diamonds 1)
+                    (clubs 3) (clubs 4) (diamonds 3)
+                    (clubs 2) (clubs 1) (spades 4)))
+(list (str "clubs" 1) (toak 1))); Caso B
+
+(test (one-str-one-toak (list (spades 1) (hearts 1) (diamonds 1)
+                    (clubs 3) (clubs 4) (diamonds 3)
+                    (clubs 2) (clubs 7) (clubs 5)))
+(list (str "clubs" 2) (toak 1)));CasoA
+
+#;(test (one-str-one-toak (list (spades 1) (hearts 1) (diamonds 10)
+                    (clubs 3) (clubs 4) (diamonds 3)
+                    (clubs 2) (clubs 1) (clubs 5))) '());CasoC
+#|
+
+puntaje-ronda ::  [(Listof Cards) -> (Listof Meld)] (Listof Cards) -> Number
+
+La funcion puntaje-ronda recibe como parametro una funcion, una ronda, y un mazo de cartas.
+Retorna el puntaje de la ronda
+|#
+
+(define (puntaje-ronda ronda cards) void
+  
+  (define (remove-cards mlt cs)
+    (match mlt
+      [(str pinta ini) (remove* (build-scala mlt 4 '()) cs)]
+      [(toak n) (filter (λ(c) (not (= (get-num c) n))) cs)]
+      )
+    )
+  
+  (def l-melt (ronda cards))
+  (def l-up (foldl (λ(m c)(remove-cards m c)) (sort cards (λ(n m)(< (get-num n) (get-num m)))) l-melt))
+  (foldl (λ(c vi)(+ vi (cond 
+                        [(= (get-num c) 1) 15]
+                        [(>= (get-num c) 10) 10]
+                        [else (get-num c)]
+                        ) )) 0 l-up)
+  )
+
+(test (puntaje-ronda two-toak (list (spades 1) (hearts 1) (diamonds 1)
+                    (clubs 3) (hearts 4) (diamonds 3)
+                    (clubs 2) (hearts 1) (diamonds 2))) 74)
+
+(test (puntaje-ronda three-toak (list (spades 11) (hearts 11) (diamonds 11)
+                    (clubs 1) (hearts 1) (diamonds 1)
+                    (clubs 12) (hearts 12) (diamonds 12))) 0)
+
+(test (puntaje-ronda one-str-one-toak (list (spades 1) (hearts 1) (diamonds 1)
+                    (clubs 3) (clubs 4) (diamonds 3)
+                    (clubs 2) (clubs 7) (clubs 5)))
+10)
+
+(test (puntaje-ronda two-str (list (spades 1) (hearts 3) (spades 2) (spades 3) (hearts 5) (hearts 4) (clubs 2) (spades 4) (hearts 6)))
+ 2)
+
+#|
+best-play :: (Listof Cards) -> String
+
+La funcion best-play recibe como parametro una lista de cartas, y retorna un string con el nombre de la ronda que permite obtener menor puntaje con las cartas dadas.
+|#
+
+(define (best-play cards)
+
+  
+  (letrec([ptje-2t (puntaje-ronda two-toak cards)]
+       [ptje-3t (puntaje-ronda three-toak cards)]
+       [ptje-1s1t (puntaje-ronda one-str-one-toak cards)]
+       [ptje-2s (puntaje-ronda two-str cards)]
+       [fprior (λ(ronda p)(cond
+                            [(equal? "two-toak" ronda) "two-toak"]
+                            [(equal? "three-toak" ronda)(cond
+                                                        [(= p ptje-2t) "two-toak"]
+                                                        [(= p ptje-1s1t) "one-str-one-toak"]
+                                                        [(= p ptje-2s) "two-str"]
+                                                        )]
+                            [(equal? "one-str-one-toak" ronda)(cond
+                                                        [(= p ptje-2t) "two-toak"]
+                                                        [(= p ptje-3t) "one-str-one-toak"]
+                                                        [(= p ptje-2s) "one-str-one-toak"]
+                                                        )]
+                            [(equal? "two-str" ronda)(cond
+                                                        [(= p ptje-2t) "two-toak"]
+                                                        [(= p ptje-1s1t) "one-str-one-toak"]
+                                                        [(= p ptje-3t) "two-str"]
+                                                        )]
+                            
+                            ))]
+       )
+    (def ptjes (sort (list ptje-2t ptje-3t ptje-1s1t ptje-2s) <))
+    (cond 
+      [(= ptje-2t (car ptjes)) (if (not (= (car ptjes) (second ptjes))) 
+                                   "two-toak"
+                                   (fprior "two-toak" (car ptjes))
+                                   ) ]
+      [(= ptje-3t (car ptjes))  (if (not (= (car ptjes) (second ptjes))) 
+                                   "three-toak"
+                                   (fprior "three-toak" (car ptjes))
+                                   )]
+      [(= ptje-1s1t (car ptjes))  (if (not (= (car ptjes) (second ptjes))) 
+                                   "one-str-one-toak"
+                                   (fprior "one-str-one-toak" (car ptjes))
+                                   )]
+      [(= ptje-2s (car ptjes))  (if (not (= (car ptjes) (second ptjes))) 
+                                   "two-str"
+                                   (fprior "two-str" (car ptjes))
+                                   )]
+      )
+    )
+  )
+
+(test (best-play (list (spades 1) (hearts 1) (diamonds 1)
+                    (clubs 3) (clubs 4) (diamonds 3)
+                    (clubs 2) (clubs 7) (clubs 5))) "one-str-one-toak" )
